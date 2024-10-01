@@ -3,7 +3,7 @@ const app = express()
 require('dotenv').config()
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken')
 
 const port = process.env.PORT || 8000
@@ -48,6 +48,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+
+    const roomCollection = client.db('StayVista').collection('rooms')
+
     // auth related api
     app.post('/jwt', async (req, res) => {
       const user = req.body
@@ -77,6 +80,21 @@ async function run() {
         res.status(500).send(err)
       }
     })
+
+    // get all rooms
+    app.get('/rooms', async(req, res)=>{
+      const result = await roomCollection.find().toArray();
+      res.send(result);
+    })
+
+    // get signle room data from DB usign _id
+    app.get('/room/:id', async(req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await roomCollection.findOne(query)
+      res.send(result);
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
